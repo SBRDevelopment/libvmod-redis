@@ -10,6 +10,13 @@
 #include <hiredis/hiredis.h>
 
 
+#define	LOG_E(...) fprintf(stderr, __VA_ARGS__);
+#ifdef DEBUG
+#	define	LOG_T(...) fprintf(stderr, __VA_ARGS__);
+#else
+#	define	LOG_T(...) do {} while(0);
+#endif
+
 typedef struct redisConfig {
 	char *host;
 	int port;
@@ -41,7 +48,7 @@ make_key()
 int
 init_function(struct vmod_priv *priv, const struct VCL_conf *conf)
 {
-	fprintf(stderr, "redis init called\n");
+	LOG_T("redis init called\n");
 
 	(void)pthread_once(&redis_key_once, make_key);
 
@@ -55,7 +62,7 @@ redis_common(struct sess *sp, struct vmod_priv *priv, const char *command)
 	redisContext *c;
 	redisReply *reply;
 
-	fprintf(stderr, "redis(%x): running %s %p\n", pthread_self(), command, priv->priv);
+	LOG_T("redis(%x): running %s %p\n", pthread_self(), command, priv->priv);
 
 	cfg = priv->priv;
 	if (cfg == NULL) {
@@ -68,14 +75,14 @@ redis_common(struct sess *sp, struct vmod_priv *priv, const char *command)
 	if ((c = pthread_getspecific(redis_key)) == NULL) {
 		c = redisConnect(cfg->host, cfg->port);
 		if (c->err) {
-			fprintf(stderr, "redis error (connect): %s\n", c->errstr);
+			LOG_E("redis error (connect): %s\n", c->errstr);
 		}
 		(void)pthread_setspecific(redis_key, c);
 	}
 
 	reply = redisCommand(c, command);
 	if (reply == NULL) {
-		fprintf(stderr, "redis error (command): err=%d errstr=%s\n", c->err, c->errstr);
+		LOG_E("redis error (command): err=%d errstr=%s\n", c->err, c->errstr);
 		return NULL;
 	}
 
