@@ -48,12 +48,12 @@ init_function(struct vmod_priv *priv, const struct VCL_conf *conf)
 	return (0);
 }
 
-const char *
-vmod_redis(struct sess *sp, struct vmod_priv *priv, const char *command)
+static redisReply *
+redis_common(struct sess *sp, struct vmod_priv *priv, const char *command)
 {
 	config_t *cfg;
 	redisContext *c;
-	const char *ret;
+	redisReply *reply;
 
 	fprintf(stderr, "redis(%x): running %s %p\n", pthread_self(), command, priv->priv);
 
@@ -68,14 +68,37 @@ vmod_redis(struct sess *sp, struct vmod_priv *priv, const char *command)
 	if ((c = pthread_getspecific(redis_key)) == NULL) {
 		c = redisConnect(cfg->host, cfg->port);
 		if (c->err) {
-			printf("redis error (connect): %s\n", c->errstr);
+			fprintf(stderr, "redis error (connect): %s\n", c->errstr);
 		}
 		(void)pthread_setspecific(redis_key, c);
 	}
 
-	redisReply *reply = redisCommand(c, command);
+	reply = redisCommand(c, command);
 	if (reply == NULL) {
 		fprintf(stderr, "redis error (command): err=%d errstr=%s\n", c->err, c->errstr);
+		return NULL;
+	}
+
+	return reply;
+}
+
+void
+vmod_send(struct sess *sp, struct vmod_priv *priv, const char *command)
+{
+	redisReply *reply = redis_common(sp, priv, command);
+	if (reply != NULL) {
+		freeReplyObject(reply);
+	}
+}
+
+const char *
+vmod_call(struct sess *sp, struct vmod_priv *priv, const char *command)
+{
+	redisReply *reply;
+	const char *ret;
+
+	reply = redis_common(sp, priv, command);
+	if (reply == NULL) {
 		return NULL;
 	}
 

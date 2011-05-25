@@ -1,3 +1,4 @@
 Module redis
 Init init_function
-Function STRING redis(PRIV_CALL, STRING)
+Function VOID send(PRIV_CALL, STRING)
+Function STRING call(PRIV_CALL, STRING)
