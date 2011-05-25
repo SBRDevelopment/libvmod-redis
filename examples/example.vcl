@@ -19,7 +19,7 @@ sub vcl_recv {
 
   #
   # redis.call is a function that sends the command to redis and return the
-  # return value.
+  # return value as a string.
   #
   set req.http.x-redis = redis.call("LTRIM client 0 99");
 }
