@@ -8,6 +8,9 @@ testing and we have never used it in production. At the very minimum, it will
 slow down Varnish a fair amount (at least a few milliseconds per request,
 depending on how fast your network and your redis server are).
 
+So far the module builds and runs on FreeBSD--on other platforms, you are on your own (pull requests welcome).
+
+
 Functions and procedures
 ------------------------
 
