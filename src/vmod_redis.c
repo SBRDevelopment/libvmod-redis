@@ -60,7 +60,7 @@ redis_common(struct sess *sp, struct vmod_priv *priv, const char *command)
 {
 	config_t *cfg;
 	redisContext *c;
-	redisReply *reply;
+	redisReply *reply = NULL;
 
 	LOG_T("redis(%x): running %s %p\n", pthread_self(), command, priv->priv);
 
@@ -95,7 +95,6 @@ redis_common(struct sess *sp, struct vmod_priv *priv, const char *command)
 	}
 	if (reply == NULL) {
 		LOG_E("redis error (command): err=%d errstr=%s\n", c->err, c->errstr);
-		return NULL;
 	}
 
 	return reply;
@@ -113,12 +112,12 @@ vmod_send(struct sess *sp, struct vmod_priv *priv, const char *command)
 const char *
 vmod_call(struct sess *sp, struct vmod_priv *priv, const char *command)
 {
-	redisReply *reply;
-	const char *ret;
+	redisReply *reply = NULL;
+	const char *ret = NULL;
 
 	reply = redis_common(sp, priv, command);
 	if (reply == NULL) {
-		return NULL;
+		goto done;
 	}
 
 	switch (reply->type) {
@@ -144,7 +143,10 @@ vmod_call(struct sess *sp, struct vmod_priv *priv, const char *command)
 		ret = strdup("unexpected");
 	}
 
-	freeReplyObject(reply);
+done:
+	if (reply) {
+		freeReplyObject(reply);
+	}
 	
 	return ret;
 }
