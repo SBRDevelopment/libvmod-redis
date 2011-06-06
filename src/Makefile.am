@@ -1,5 +1,5 @@
 INCLUDES = -I$(VARNISHSRC)/include -I$(VARNISHSRC) -I/usr/local/include
-LDFLAGS = -L/usr/local/lib -lhiredis
+LDFLAGS += -L/usr/local/lib -lhiredis
 
 vmoddir = $(VMODDIR)
 vmod_LTLIBRARIES = libvmod_redis.la
