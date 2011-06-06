@@ -4,7 +4,7 @@ LDFLAGS += -L/usr/local/lib -lhiredis
 vmoddir = $(VMODDIR)
 vmod_LTLIBRARIES = libvmod_redis.la
 
-libvmod_redis_la_LDFLAGS = -version-info 1:0:0
+libvmod_redis_la_LDFLAGS = -module -export-dynamic -version-info 1:0:0
 
 libvmod_redis_la_SOURCES = \
 	vcc_if.c \
