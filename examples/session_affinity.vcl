@@ -85,7 +85,7 @@ sub set_backend_by_name {
     } else if (req.http.x_backend == "be2") {
       set req.backend = be2;
     } else {
-      return(error 503 "No such backend " + req.http.x_backend);
+      error 503 "No such backend " + req.http.x_backend;
     }
   }
 }
