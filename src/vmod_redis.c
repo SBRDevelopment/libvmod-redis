@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/time.h>
 
 #include "vrt.h"
 #include "bin/varnishd/cache.h"
@@ -8,6 +9,9 @@
 
 #include <pthread.h>
 #include <hiredis/hiredis.h>
+
+
+#define REDIS_TIMEOUT_MS	200	/* 200 milliseconds */
 
 
 #define	LOG_E(...) fprintf(stderr, __VA_ARGS__);
@@ -20,6 +24,7 @@
 typedef struct redisConfig {
 	char *host;
 	int port;
+	struct timeval timeout;
 } config_t;
 
 static pthread_key_t redis_key;
@@ -59,6 +64,8 @@ init_function(struct vmod_priv *priv, const struct VCL_conf *conf)
 		priv->free = free;
 		cfg->host = strdup("127.0.0.1");
 		cfg->port = 6379;
+		cfg->timeout.tv_sec = REDIS_TIMEOUT_MS / 1000;
+		cfg->timeout.tv_usec = (REDIS_TIMEOUT_MS % 1000) * 1000;
 	}
 
 	return (0);
@@ -74,7 +81,7 @@ redis_common(struct sess *sp, struct vmod_priv *priv, const char *command)
 	LOG_T("redis(%x): running %s %p\n", pthread_self(), command, priv->priv);
 
 	if ((c = pthread_getspecific(redis_key)) == NULL) {
-		c = redisConnect(cfg->host, cfg->port);
+		c = redisConnectWithTimeout(cfg->host, cfg->port, cfg->timeout);
 		if (c->err) {
 			LOG_E("redis error (connect): %s\n", c->errstr);
 		}
@@ -83,7 +90,7 @@ redis_common(struct sess *sp, struct vmod_priv *priv, const char *command)
 
 	reply = redisCommand(c, command);
 	if (reply == NULL && c->err == REDIS_ERR_EOF) {
-		c = redisConnect(cfg->host, cfg->port);
+		c = redisConnectWithTimeout(cfg->host, cfg->port, cfg->timeout);
 		if (c->err) {
 			LOG_E("redis error (reconnect): %s\n", c->errstr);
 			redisFree(c);
