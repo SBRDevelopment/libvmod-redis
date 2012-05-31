@@ -48,9 +48,18 @@ make_key()
 int
 init_function(struct vmod_priv *priv, const struct VCL_conf *conf)
 {
+	config_t *cfg;
+
 	LOG_T("redis init called\n");
 
 	(void)pthread_once(&redis_key_once, make_key);
+
+	if (priv->priv == NULL) {
+		priv->priv = cfg = malloc(sizeof(config_t));
+		priv->free = free;
+		cfg->host = strdup("127.0.0.1");
+		cfg->port = 6379;
+	}
 
 	return (0);
 }
@@ -58,19 +67,11 @@ init_function(struct vmod_priv *priv, const struct VCL_conf *conf)
 static redisReply *
 redis_common(struct sess *sp, struct vmod_priv *priv, const char *command)
 {
-	config_t *cfg;
+	config_t *cfg = priv->priv;
 	redisContext *c;
 	redisReply *reply = NULL;
 
 	LOG_T("redis(%x): running %s %p\n", pthread_self(), command, priv->priv);
-
-	cfg = priv->priv;
-	if (cfg == NULL) {
-		priv->priv = cfg = malloc(sizeof(config_t));
-		priv->free = free;
-		cfg->host = strdup("127.0.0.1");
-		cfg->port = 6379;
-	}
 
 	if ((c = pthread_getspecific(redis_key)) == NULL) {
 		c = redisConnect(cfg->host, cfg->port);
