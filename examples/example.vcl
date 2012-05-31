@@ -22,7 +22,7 @@ backend be1 {
 
 sub vcl_recv {
   #
-  # redis.call is a procedure, it will send the command to redis and ignore
+  # redis.send is a procedure, it will send the command to redis and ignore
   # the response. If the command errors out, it will be logged but the VCL
   # will not know.
   #
