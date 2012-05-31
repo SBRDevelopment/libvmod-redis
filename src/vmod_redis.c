@@ -114,6 +114,7 @@ vmod_call(struct sess *sp, struct vmod_priv *priv, const char *command)
 {
 	redisReply *reply = NULL;
 	const char *ret = NULL;
+	char *digits;
 
 	reply = redis_common(sp, priv, command);
 	if (reply == NULL) {
@@ -128,7 +129,10 @@ vmod_call(struct sess *sp, struct vmod_priv *priv, const char *command)
 		ret = strdup(reply->str);
 		break;
 	case REDIS_REPLY_INTEGER:
-		ret = strdup("integer");	/* FIXME */
+		digits = malloc(21); /* sizeof(long long) == 8; 20 digits + NUL */
+		if(digits)
+			sprintf(digits, "%lld", reply->integer);
+		ret = digits;
 		break;
 	case REDIS_REPLY_NIL:
 		ret = NULL;
