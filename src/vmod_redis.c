@@ -49,6 +49,32 @@ make_key()
 {
 	(void)pthread_key_create(&redis_key, NULL);
 }
+
+static config_t *
+make_config(const char *host, int port, int timeout_ms)
+{
+	config_t *cfg;
+
+	LOG_T("make_config(%s,%d,%d)\n", host, port, timeout_ms);
+
+	cfg = malloc(sizeof(config_t));
+	if(cfg == NULL)
+		return NULL;
+
+	if(port <= 0)
+		port = 6379;
+
+	if(timeout_ms <= 0)
+		timeout_ms = REDIS_TIMEOUT_MS;
+
+	cfg->host = strdup(host);
+	cfg->port = port;
+
+	cfg->timeout.tv_sec = timeout_ms / 1000;
+	cfg->timeout.tv_usec = (timeout_ms % 1000) * 1000;
+
+	return cfg;
+}
  
 int
 init_function(struct vmod_priv *priv, const struct VCL_conf *conf)
@@ -60,15 +86,23 @@ init_function(struct vmod_priv *priv, const struct VCL_conf *conf)
 	(void)pthread_once(&redis_key_once, make_key);
 
 	if (priv->priv == NULL) {
-		priv->priv = cfg = malloc(sizeof(config_t));
+		priv->priv = make_config("127.0.0.1", 6379, REDIS_TIMEOUT_MS);
 		priv->free = free;
-		cfg->host = strdup("127.0.0.1");
-		cfg->port = 6379;
-		cfg->timeout.tv_sec = REDIS_TIMEOUT_MS / 1000;
-		cfg->timeout.tv_usec = (REDIS_TIMEOUT_MS % 1000) * 1000;
 	}
 
 	return (0);
+}
+
+void
+vmod_init_redis(struct sess *sp, struct vmod_priv *priv, const char *host, int port, int timeout_ms)
+{
+	config_t *old_cfg = priv->priv;
+
+	priv->priv = make_config(host, port, timeout_ms);
+	if(priv->priv && old_cfg) {
+		free(old_cfg->host);
+		free(old_cfg);
+	}
 }
 
 static redisReply *
