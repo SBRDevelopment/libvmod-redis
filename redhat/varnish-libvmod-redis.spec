@@ -35,7 +35,7 @@ rm -rf %{buildroot}
 /usr/local/lib/varnish/vmods/
 %doc /usr/share/doc/%{name}/*
 
-%{_mandir}/man3/*.3*
+#%{_mandir}/man3/*.3*
 
 %preun
 
