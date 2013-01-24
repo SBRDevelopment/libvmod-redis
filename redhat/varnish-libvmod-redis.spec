@@ -1,6 +1,6 @@
 %define build_revision %(R=$(python version); echo $R)
 %define varnish_src $HOME/varnish-3.0.3/
-%define vmod_dir /usr/local/lib/varnish/vmods/
+%define vmod_dir /usr/lib64/varnish/vmods/
 
 Summary: varnish-libvmod-redis
 Name: varnish-libvmod-redis
