@@ -1,7 +1,11 @@
+%define build_revision %(R=$(python version); echo $R)
+%define varnish_src $HOME/varnish-3.0.3/
+%define vmod_dir /usr/local/lib/varnish/vmods/
+
 Summary: varnish-libvmod-redis
 Name: varnish-libvmod-redis
 Version: 0.1
-Release: 1%{?dist}
+Release: %{build_revision}
 License: BSD
 Group: System Environment/Daemons
 Source0: ./libvmod-redis.tar.gz
@@ -18,7 +22,7 @@ libvmod-redis
 %build
 ./autogen.sh
 # this is a hack and assumes a prebuilt copy of varnish in VARNISHSRC.
-./configure VARNISHSRC=$HOME/varnish-3.0.3/ VMODDIR=/usr/local/lib/varnish/vmods/ --prefix=/usr/
+./configure VARNISHSRC=%{varnish_src} VMODDIR=%{vmod_dir} --prefix=/usr/
 make
 
 %install
@@ -32,7 +36,7 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-/usr/local/lib/varnish/vmods/
+%{vmod_dir}/
 %doc /usr/share/doc/%{name}/*
 
 #%{_mandir}/man3/*.3*
