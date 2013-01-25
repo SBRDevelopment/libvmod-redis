@@ -42,7 +42,7 @@ do
 done
 
 export RELEASE=$RELEASE
-sh make-tarball.sh
+sh make-tarball
 rpmbuild -ba varnish-${BASE_NAME}.spec
 
 if [ -n "$VERIFY" ];
